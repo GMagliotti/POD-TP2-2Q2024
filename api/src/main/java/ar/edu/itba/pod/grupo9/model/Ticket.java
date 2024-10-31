@@ -25,7 +25,7 @@ import java.time.format.DateTimeFormatter;
 public class Ticket implements DataSerializable {
     private String plate;
     private String code;
-    private Long fineAmount;
+    private Double fineAmount;
     private String issuingAgency;
     private LocalDate issueDate;
     private String countyName;
@@ -34,7 +34,7 @@ public class Ticket implements DataSerializable {
         // empty constructor for Hazelcast
     }
 
-    public Ticket(String plate, String code, Long fineAmount, String issuingAgency, LocalDate issueDate, String countyName) {
+    public Ticket(String plate, String code, Double fineAmount, String issuingAgency, LocalDate issueDate, String countyName) {
         this.plate = plate;
         this.code = code;
         this.fineAmount = fineAmount;
@@ -47,7 +47,7 @@ public class Ticket implements DataSerializable {
         return new Ticket(
                 line[3],
                 line[4],
-                Long.parseLong(line[5]),
+                Double.parseDouble(line[5]),
                 line[2],
                 LocalDate.parse(line[0], DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
                 line[1]
@@ -58,7 +58,7 @@ public class Ticket implements DataSerializable {
         return new Ticket(
                 line[0],
                 line[1],
-                Long.parseLong(line[2]),
+                Double.parseDouble(line[2]),
                 line[3],
                 LocalDate.parse(line[4], DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                 line[5]
@@ -69,7 +69,7 @@ public class Ticket implements DataSerializable {
     public void writeData(ObjectDataOutput out) throws IOException {
         out.writeUTF(plate);
         out.writeUTF(code);
-        out.writeLong(fineAmount);
+        out.writeDouble(fineAmount);
         out.writeUTF(issuingAgency);
         out.writeUTF(countyName);
         out.writeLong(issueDate.toEpochDay());
@@ -79,7 +79,7 @@ public class Ticket implements DataSerializable {
     public void readData(ObjectDataInput in) throws IOException {
         plate = in.readUTF();
         code = in.readUTF();
-        fineAmount = in.readLong();
+        fineAmount = in.readDouble();
         issuingAgency = in.readUTF();
         countyName = in.readUTF();
         issueDate = LocalDate.ofEpochDay(in.readLong());
@@ -125,7 +125,7 @@ public class Ticket implements DataSerializable {
         return code;
     }
 
-    public Long getFineAmount() {
+    public Double getFineAmount() {
         return fineAmount;
     }
 

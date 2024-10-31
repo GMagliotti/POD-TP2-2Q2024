@@ -1,0 +1,117 @@
+package ar.edu.itba.pod.grupo9.client.util.query;
+
+import ar.edu.itba.pod.grupo9.model.Infraction;
+import ar.edu.itba.pod.grupo9.model.Pair;
+import ar.edu.itba.pod.grupo9.model.Ticket;
+import ar.edu.itba.pod.grupo9.query1.InfractionAgencyCountCollator;
+import ar.edu.itba.pod.grupo9.query1.InfractionAgencyCountCombinerFactory;
+import ar.edu.itba.pod.grupo9.query1.InfractionAgencyCountMapper;
+import ar.edu.itba.pod.grupo9.query1.InfractionAgencyCountReducerFactory;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.ICompletableFuture;
+import com.hazelcast.core.IMap;
+import com.hazelcast.core.MultiMap;
+import com.hazelcast.mapreduce.Job;
+import com.hazelcast.mapreduce.JobTracker;
+import com.hazelcast.mapreduce.KeyValueSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.stream.Collectors;
+
+@SuppressWarnings("deprecation")
+public enum QueryEngine {
+    NYC {
+        @Override
+        public List<Map.Entry<Pair<String, String>, Integer>> runQuery1(HazelcastInstance hazelcastInstance) {
+            try(
+                    InputStream inputStream = getClass().getClassLoader().getResourceAsStream("config.properties")
+            ) {
+                Properties prop = new Properties();
+                if (inputStream != null) {
+                    prop.load(inputStream);
+                } else {
+                    throw new RuntimeException("property file not found in the classpath");
+                }
+
+                final MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets"));
+                final IMap<String, Infraction> infractions = hazelcastInstance.getMap(prop.getProperty("hz.collection.infractions"));
+
+                final JobTracker jobTracker = hazelcastInstance.getJobTracker(prop.getProperty("hz.cluster.name"));
+
+                final KeyValueSource<String, Ticket> source = KeyValueSource.fromMultiMap(tickets);
+
+                final Job<String, Ticket> job = jobTracker.newJob(source);
+
+                final ICompletableFuture<List<Map.Entry<Pair<String, String>, Integer>>> future = job
+                        .mapper(new InfractionAgencyCountMapper())
+                        .combiner(new InfractionAgencyCountCombinerFactory())
+                        .reducer(new InfractionAgencyCountReducerFactory())
+                        .submit(new InfractionAgencyCountCollator(infractions));
+
+                try{
+                    return future.get();
+                } catch (Exception e) {
+                    logger.error("Error getting future result", e);
+                    System.exit(1);
+                }
+
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
+            return null;
+        }
+    },
+    CHI {
+        @Override
+        public List<Map.Entry<Pair<String, String>, Integer>> runQuery1(HazelcastInstance hazelcastInstance) {
+            try (
+                    InputStream inputStream = getClass().getClassLoader().getResourceAsStream("config.properties")
+                    ) {
+                Properties prop = new Properties();
+                if (inputStream != null) {
+                    prop.load(inputStream);
+                } else {
+                    throw new RuntimeException("property file not found in the classpath");
+                }
+
+                final MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets"));
+                final IMap<String, Infraction> infractions = hazelcastInstance.getMap(prop.getProperty("hz.collection.infractions"));
+
+                final JobTracker jobTracker = hazelcastInstance.getJobTracker(prop.getProperty("hz.cluster.name"));
+
+                final KeyValueSource<String, Ticket> source = KeyValueSource.fromMultiMap(tickets);
+
+                final Job<String, Ticket> job = jobTracker.newJob(source);
+
+                final ICompletableFuture<List<Map.Entry<Pair<String, String>, Integer>>> future = job
+                        .mapper(new InfractionAgencyCountMapper())
+                        .combiner(new InfractionAgencyCountCombinerFactory())
+                        .reducer(new InfractionAgencyCountReducerFactory())
+                        .submit(new InfractionAgencyCountCollator(infractions));
+
+                try{
+                    return future.get();
+                } catch (Exception e) {
+                    logger.error("Error getting future result", e);
+                    System.exit(1);
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
+            return null;
+        }
+    };
+
+    private static final Logger logger = LoggerFactory.getLogger(QueryEngine.class);
+
+    public abstract List<Map.Entry<Pair<String, String>, Integer>> runQuery1(HazelcastInstance hazelcastInstance);
+}

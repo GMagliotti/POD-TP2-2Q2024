@@ -1,5 +1,6 @@
 package ar.edu.itba.pod.grupo9.query1;
 
+import ar.edu.itba.pod.grupo9.model.Infraction;
 import ar.edu.itba.pod.grupo9.model.Pair;
 import com.hazelcast.mapreduce.Collator;
 
@@ -13,9 +14,9 @@ import java.util.stream.StreamSupport;
 @SuppressWarnings("deprecation")
 public class InfractionAgencyCountCollator implements Collator<Map.Entry<Pair<String, String>, Integer>, List<Map.Entry<Pair<String, String>, Integer>>> {
 
-    private final Map<String, String> codeToDescription;
+    private final Map<String, Infraction> codeToDescription;
 
-    public InfractionAgencyCountCollator(Map<String, String> codeToDescription) {
+    public InfractionAgencyCountCollator(Map<String, Infraction> codeToDescription) {
         this.codeToDescription = codeToDescription;
     }
 
@@ -26,9 +27,9 @@ public class InfractionAgencyCountCollator implements Collator<Map.Entry<Pair<St
                     Pair<String, String> key = entry.getKey();
                     String code = key.getFirst();
                     String agency = key.getSecond();
-                    String description = codeToDescription.get(code);
+                    String description = codeToDescription.get(code).getDescription();
                     if (description == null) {
-                        description = "Unknown";
+                        description = "";
                     }
                     return Map.entry(new Pair<>(description, agency), entry.getValue());
                 })
