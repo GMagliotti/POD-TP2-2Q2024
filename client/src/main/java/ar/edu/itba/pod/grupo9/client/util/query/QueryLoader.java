@@ -20,167 +20,82 @@ public enum QueryLoader {
     NYC {
         @Override
         public void loadQuery1(HazelcastInstance hazelcastInstance, String inPath) {
-            // load the tickets and infractions for NYC using IMap and MultiMap. We also have the opencsv library to read the csv files
-            logger.info("Loading tickets and infractions for NYC");
-
-            try(
-                    InputStream inputStream = getClass().getClassLoader().getResourceAsStream("config.properties")
-                    ) {
-
-                Properties prop = new Properties();
-                if (inputStream != null) {
-                    prop.load(inputStream);
-                } else {
-                    throw new RuntimeException("property file not found in the classpath");
-                }
-
-                final MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets"));
-                final IMap<String, Infraction> infractions = hazelcastInstance.getMap(prop.getProperty("hz.collection.infractions"));
-                logger.info("Loading tickets and infractions for NYC");
-
-                String ticketsFile = inPath + "/" + City.NYC.getTicketsPath();
-                String infractionsFile = inPath + "/" + City.NYC.getInfractionsPath();
-
-                try (
-                        CSVReader reader = new CSVReaderBuilder(new FileReader(ticketsFile))
-                                .withCSVParser(new CSVParserBuilder()
-                                        .withSeparator(';')
-                                        .build()
-                                )
-                                .withSkipLines(1)
-                                .build()
-                ) {
-                    String[] line;
-                    logger.info("NYC tickets loading started");
-                    while ((line = reader.readNext()) != null) {
-                        final Ticket ticket = Ticket.fromNycCsv(line);
-                        tickets.put(ticket.getCode(), ticket);
-                    }
-                } catch (IOException e) {
-                    System.out.println("Error reading tickets file");
-                    e.printStackTrace();
-                    System.exit(1);
-                } catch (CsvValidationException e) {
-                    throw new RuntimeException(e);
-                } finally {
-                    logger.info("NYC tickets loading finished");
-                }
-
-                try (
-                        CSVReader reader = new CSVReaderBuilder(new FileReader(infractionsFile))
-                                .withCSVParser(new CSVParserBuilder()
-                                        .withSeparator(';')
-                                        .build()
-                                )
-                                .withSkipLines(1)
-                                .build()
-                ) {
-                    String[] line;
-                    logger.info("NYC infractions loading started");
-                    while ((line = reader.readNext()) != null) {
-                        final Infraction infraction = Infraction.fromInfractionCsv(line);
-                        infractions.put(infraction.getCode(), infraction);
-                    }
-                } catch (IOException e) {
-                    System.out.println("Error reading infractions file");
-                    e.printStackTrace();
-                    System.exit(1);
-                } catch (CsvValidationException e) {
-                    throw new RuntimeException(e);
-                } finally {
-                    logger.info("NYC infractions loading finished");
-                }
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.exit(1);
-            }
-
-
+            loadData(hazelcastInstance, inPath, City.NYC);
         }
-    }, CHI {
+    },
+    CHI {
         @Override
         public void loadQuery1(HazelcastInstance hazelcastInstance, String inPath) {
-
-            logger.info("Loading tickets and infractions for CHI");
-            try (
-                    InputStream inputStream = getClass().getClassLoader().getResourceAsStream("config.properties")
-                    ) {
-
-                Properties prop = new Properties();
-                if (inputStream != null) {
-                    prop.load(inputStream);
-                } else {
-                    throw new RuntimeException("property file not found in the classpath");
-                }
-
-                final MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets"));
-                final IMap<String, Infraction> infractions = hazelcastInstance.getMap(prop.getProperty("hz.collection.infractions"));
-
-                logger.info("Loading tickets and infractions for CHI");
-
-                String ticketsFile = inPath + "/" + City.CHI.getTicketsPath();
-                String infractionsFile = inPath + "/" + City.CHI.getInfractionsPath();
-
-                try (
-                        CSVReader reader = new CSVReaderBuilder(new FileReader(ticketsFile))
-                                .withCSVParser(new CSVParserBuilder()
-                                        .withSeparator(';')
-                                        .build()
-                                )
-                                .withSkipLines(1)
-                                .build()
-                ) {
-                    String[] line;
-                    logger.info("CHI tickets loading started");
-                    while ((line = reader.readNext()) != null) {
-                        final Ticket ticket = Ticket.fromChiCsv(line);
-                        tickets.put(ticket.getCode(), ticket);
-                    }
-                } catch (IOException e) {
-                    System.out.println("Error reading tickets file");
-                    e.printStackTrace();
-                    System.exit(1);
-                } catch (CsvValidationException e) {
-                    throw new RuntimeException(e);
-                } finally {
-                    logger.info("CHI tickets loading finished");
-                }
-
-                try (
-                        CSVReader reader = new CSVReaderBuilder(new FileReader(infractionsFile))
-                                .withCSVParser(new CSVParserBuilder()
-                                        .withSeparator(';')
-                                        .build()
-                                )
-                                .withSkipLines(1)
-                                .build()
-                ) {
-                    String[] line;
-                    logger.info("CHI infractions loading started");
-                    while ((line = reader.readNext()) != null) {
-                        final Infraction infraction = Infraction.fromInfractionCsv(line);
-                        infractions.put(infraction.getCode(), infraction);
-                    }
-                } catch (IOException e) {
-                    System.out.println("Error reading infractions file");
-                    e.printStackTrace();
-                    System.exit(1);
-                } catch (CsvValidationException e) {
-                    throw new RuntimeException(e);
-                } finally {
-                    logger.info("CHI infractions loading finished");
-                }
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.exit(1);
-            }
-
+            loadData(hazelcastInstance, inPath, City.CHI);
         }
     };
 
     private static final Logger logger = LoggerFactory.getLogger(QueryLoader.class);
+
+    private static void loadData(HazelcastInstance hazelcastInstance, String inPath, City city) {
+        Properties prop = loadProperties();
+        MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets." + city.name().toLowerCase()));
+        IMap<String, Infraction> infractions = hazelcastInstance.getMap(prop.getProperty("hz.collection.infractions." + city.name().toLowerCase()));
+
+        loadTickets(tickets, inPath + "/" + city.getTicketsPath(), city);
+        loadInfractions(infractions, inPath + "/" + city.getInfractionsPath(), city);
+    }
+
+    private static Properties loadProperties() {
+        Properties prop = new Properties();
+        try (InputStream inputStream = QueryLoader.class.getClassLoader().getResourceAsStream("config.properties")) {
+            if (inputStream != null) {
+                prop.load(inputStream);
+            } else {
+                throw new RuntimeException("Property file not found in the classpath");
+            }
+        } catch (IOException e) {
+            logger.error("Error loading properties file", e);
+            System.exit(1);
+        }
+        return prop;
+    }
+
+    private static void loadTickets(MultiMap<String, Ticket> tickets, String filePath, City city) {
+        logger.info("{} tickets loading started", city);
+        try (CSVReader reader = new CSVReaderBuilder(new FileReader(filePath))
+                .withCSVParser(new CSVParserBuilder().withSeparator(';').build())
+                .withSkipLines(1)
+                .build()) {
+
+            String[] line;
+            while ((line = reader.readNext()) != null) {
+                Ticket ticket = city == City.NYC ? Ticket.fromNycCsv(line) : Ticket.fromChiCsv(line);
+                tickets.put(ticket.getCode(), ticket);
+            }
+        } catch (IOException | CsvValidationException e) {
+            logger.error("Error reading tickets file", e);
+            System.exit(1);
+        } finally {
+            logger.info("{} tickets loading finished", city);
+        }
+    }
+
+    private static void loadInfractions(IMap<String, Infraction> infractions, String filePath, City city) {
+        logger.info("{} infractions loading started", city);
+        try (CSVReader reader = new CSVReaderBuilder(new FileReader(filePath))
+                .withCSVParser(new CSVParserBuilder().withSeparator(';').build())
+                .withSkipLines(1)
+                .build()) {
+
+            String[] line;
+            while ((line = reader.readNext()) != null) {
+                Infraction infraction = Infraction.fromInfractionCsv(line);
+                infractions.put(infraction.getCode(), infraction);
+            }
+        } catch (IOException | CsvValidationException e) {
+            logger.error("Error reading infractions file", e);
+            System.exit(1);
+        } finally {
+            logger.info("{} infractions loading finished", city);
+        }
+    }
+
 
     public abstract void loadQuery1(HazelcastInstance hazelcastInstance, String inPath);
 }
