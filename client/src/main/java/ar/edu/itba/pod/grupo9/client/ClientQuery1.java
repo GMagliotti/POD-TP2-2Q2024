@@ -61,7 +61,8 @@ public class ClientQuery1 extends ClientQuery{
                 writer.writeNext(line);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Error writing results", e);
+            System.exit(1);
         }
     }
 }
