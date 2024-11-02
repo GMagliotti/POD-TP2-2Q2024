@@ -18,7 +18,7 @@ public class ClientQuery1 extends ClientQuery{
     private static final Logger logger = LoggerFactory.getLogger(ClientQuery1.class);
 
     public ClientQuery1() throws IOException, InterruptedException, ExecutionException {
-    }
+     }
 
     public static void main(String[] args) {
         try (ClientQuery1 client = new ClientQuery1()){
