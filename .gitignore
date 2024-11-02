@@ -31,8 +31,7 @@ api/target/
 server/target/
 client/target/
 
-# scripts
-*.sh
-
 # out directory
 out/
+
+/scriptCompilation.sh
