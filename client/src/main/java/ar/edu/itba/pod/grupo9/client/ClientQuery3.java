@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -59,7 +60,7 @@ public class ClientQuery3 extends ClientQuery{
                 logger.info("Writing results...");
 
                 // Write results
-                writeResults(resultList, client.outputPath + "/query3.csv");
+                client.writeResults(resultList, client.outputPath + "/query3.csv");
                 logger.info("Results written");
 
             } finally {
@@ -70,22 +71,15 @@ public class ClientQuery3 extends ClientQuery{
         }
     }
 
-    private static void writeResults(List<Map.Entry<String, Double>> resultList, String outputPath) {
-        try (
-                CSVWriter writer = new CSVWriter(new java.io.FileWriter(outputPath),
-                        ';',
-                        CSVWriter.NO_QUOTE_CHARACTER,
-                        CSVWriter.DEFAULT_ESCAPE_CHARACTER,
-                        CSVWriter.DEFAULT_LINE_END);
-                ) {
+    @Override
+    protected <K, V> void writeResults(List<Map.Entry<K, V>> resultList, String outputPath) {
+        List<String[]> rows = new ArrayList<>();
+        rows.add(new String[]{"County", "Percentage"});
 
-            writer.writeNext(new String[]{"County", "Percentage"});
-            for (Map.Entry<String, Double> entry : resultList) {
-                writer.writeNext(new String[]{entry.getKey(), entry.getValue().toString()});
-            }
-        } catch (IOException e) {
-            logger.error("Error writing results", e);
-            System.exit(1);
+        for (Map.Entry<K, V> entry : resultList) {
+            rows.add(new String[]{entry.getKey().toString(), entry.getValue().toString()});
         }
+
+        writeToCSV(rows, outputPath);
     }
 }

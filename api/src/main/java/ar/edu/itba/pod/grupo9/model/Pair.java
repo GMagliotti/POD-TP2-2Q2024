@@ -51,10 +51,7 @@ public class Pair<A, B> implements DataSerializable {
 
     @Override
     public String toString() {
-        return "Pair{" +
-                "first=" + first +
-                ", second=" + second +
-                '}';
+        return first + ";" + second;
     }
 
     public A getFirst() {

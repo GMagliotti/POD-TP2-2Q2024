@@ -1,14 +1,19 @@
 package ar.edu.itba.pod.grupo9.client;
 
 import ar.edu.itba.pod.grupo9.client.util.ArgParser;
+import com.opencsv.CSVWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 
 
 import com.hazelcast.client.HazelcastClient;
@@ -78,6 +83,23 @@ public abstract class ClientQuery implements Closeable {
                 .setNetworkConfig(clientNetworkConfig);
 
         return HazelcastClient.newHazelcastClient(clientConfig);
+    }
+
+    protected abstract <K, V> void writeResults(List<Map.Entry<K, V>> rows, String outputPath);
+
+    protected void writeToCSV(List<String[]> rows, String outputPath) {
+        try (CSVWriter writer = new CSVWriter(new FileWriter(outputPath),
+                ';',
+                CSVWriter.NO_QUOTE_CHARACTER,
+                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                CSVWriter.DEFAULT_LINE_END)) {
+            for (String[] row : rows) {
+                writer.writeNext(row);
+            }
+        } catch (IOException e) {
+            logger.error("Error writing results", e);
+            System.exit(1);
+        }
     }
 
     @Override
