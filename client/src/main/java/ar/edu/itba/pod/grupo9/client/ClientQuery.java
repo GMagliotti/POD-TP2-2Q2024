@@ -49,13 +49,6 @@ public abstract class ClientQuery implements Closeable {
         this.hazelcastInstance = createHazelcastClient(prop, addressesArr);
     }
 
-
-    private void validatePath(String type, String path) {
-        if (!ArgParser.pathExists(path)) {
-            logger.error("Invalid " + type + " path: " + path);
-        }
-    }
-
     public static Properties loadProperties(String filename) {
         Properties prop = new Properties();
         try (InputStream inputStream = ClientQuery.class.getClassLoader().getResourceAsStream(filename)) {
