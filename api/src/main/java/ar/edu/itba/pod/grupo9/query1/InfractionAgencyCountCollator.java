@@ -4,8 +4,6 @@ import ar.edu.itba.pod.grupo9.model.Infraction;
 import ar.edu.itba.pod.grupo9.model.Pair;
 import com.hazelcast.mapreduce.Collator;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;

@@ -20,25 +20,42 @@ public enum QueryLoader {
     NYC {
         @Override
         public void loadQuery1(HazelcastInstance hazelcastInstance, String inPath) {
-            loadData(hazelcastInstance, inPath, City.NYC);
+            loadDataQuery1(hazelcastInstance, inPath, City.NYC);
+        }
+
+        @Override
+        public void loadQuery3(HazelcastInstance hazelcastInstance, String inPath) {
+            loadDataQuery3(hazelcastInstance, inPath, City.NYC);
         }
     },
     CHI {
         @Override
         public void loadQuery1(HazelcastInstance hazelcastInstance, String inPath) {
-            loadData(hazelcastInstance, inPath, City.CHI);
+            loadDataQuery1(hazelcastInstance, inPath, City.CHI);
+        }
+
+        @Override
+        public void loadQuery3(HazelcastInstance hazelcastInstance, String inPath) {
+            loadDataQuery3(hazelcastInstance, inPath, City.CHI);
         }
     };
 
     private static final Logger logger = LoggerFactory.getLogger(QueryLoader.class);
 
-    private static void loadData(HazelcastInstance hazelcastInstance, String inPath, City city) {
+    private static void loadDataQuery1(HazelcastInstance hazelcastInstance, String inPath, City city) {
         Properties prop = loadProperties();
         MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets." + city.name().toLowerCase()));
         IMap<String, Infraction> infractions = hazelcastInstance.getMap(prop.getProperty("hz.collection.infractions." + city.name().toLowerCase()));
 
         loadTickets(tickets, inPath + "/" + city.getTicketsPath(), city);
         loadInfractions(infractions, inPath + "/" + city.getInfractionsPath(), city);
+    }
+
+    private static void loadDataQuery3(HazelcastInstance hazelcastInstance, String inPath, City city) {
+        Properties prop = loadProperties();
+        MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets." + city.name().toLowerCase()));
+
+        loadTickets(tickets, inPath + "/" + city.getTicketsPath(), city);
     }
 
     private static Properties loadProperties() {
@@ -98,4 +115,6 @@ public enum QueryLoader {
 
 
     public abstract void loadQuery1(HazelcastInstance hazelcastInstance, String inPath);
+
+    public abstract void loadQuery3(HazelcastInstance hazelcastInstance, String inPath);
 }

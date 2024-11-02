@@ -7,7 +7,7 @@ import com.hazelcast.mapreduce.Reducer;
 @SuppressWarnings("deprecation")
 public class InfractionAgencyCountReducerFactory implements ReducerFactory<Pair<String, String>, Integer, Integer> {
     @Override
-    public com.hazelcast.mapreduce.Reducer<Integer, Integer> newReducer(Pair<String, String> key) {
+    public Reducer<Integer, Integer> newReducer(Pair<String, String> key) {
         return new InfractionAgencyCountReducer();
     }
 
