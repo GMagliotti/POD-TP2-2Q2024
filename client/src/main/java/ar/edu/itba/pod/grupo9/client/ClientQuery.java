@@ -34,29 +34,7 @@ public abstract class ClientQuery implements Closeable {
         this.outputPath = System.getProperty("outPath");
         this.addresses = System.getProperty("addresses");
 
-        // Validate city
-        if (!ArgParser.isValidCity(cityStr)) {
-            logger.error("Invalid city: " + cityStr);
-            throw new IllegalArgumentException("Invalid city: " + cityStr);
-        }
-
-        // Validate input path
-        if (!ArgParser.pathExists(inputPath)) {
-            logger.error("Invalid input path: " + inputPath);
-            throw new IllegalArgumentException("Invalid input path: " + inputPath);
-        }
-
-        // Validate output path
-        if (!ArgParser.pathExists(outputPath)) {
-            logger.error("Invalid output path: " + outputPath);
-            throw new IllegalArgumentException("Invalid output path: " + outputPath);
-        }
-
-        // Validate addresses
-        if (!ArgParser.areValidAddresses(addresses)) {
-            logger.error("Invalid addresses: " + addresses);
-            throw new IllegalArgumentException("Invalid addresses: " + addresses);
-        }
+        ArgParser.validateProperties(this.cityStr, this.inputPath, this.outputPath, this.addresses);
 
         String[] addressesArr = addresses.replaceAll("^'|'$", "").split(";");
 
