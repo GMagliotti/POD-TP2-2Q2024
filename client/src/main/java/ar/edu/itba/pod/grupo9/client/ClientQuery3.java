@@ -28,7 +28,6 @@ public class ClientQuery3 extends ClientQuery{
     }
 
     public static void main(String[] args) {
-
         String n = System.getProperty("n");
         String fromDate = System.getProperty("from");
         String toDate = System.getProperty("to");
@@ -38,36 +37,17 @@ public class ClientQuery3 extends ClientQuery{
         LocalDate from = LocalDate.parse(fromDate, ArgParser.DATE_FORMATTER);
         LocalDate to = LocalDate.parse(toDate, ArgParser.DATE_FORMATTER);
 
-        try(ClientQuery3 client = new ClientQuery3()) {
-            try {
-                client.logTimestamp("Inicio de la lectura de los archivos de entrada");
-                logger.info("Loading data...");
-
-                City city = City.getCity(client.cityStr);
-
-                logger.info("City: " + client.cityStr);
-
-                // Load data
-                city.getQueryLoader().loadQuery3(client.hazelcastInstance, client.inputPath);
-                client.logTimestamp("Fin de lectura de los archivos de entrada");
-
-                logger.info("Data loaded");
-                logger.info("Running query...");
-                client.logTimestamp("Inicio de un trabajo MapReduce");
-                // Solve query
-                List<Map.Entry<String, Double>> resultList = city.getQueryEngine().runQuery3(client.hazelcastInstance, Integer.parseInt(n), from, to);
-                client.logTimestamp("Fin de un trabajo MapReduce");
-                logger.info("Query executed");
-
-                logger.info("Writing results...");
-
-                // Write results
-                client.writeResults(resultList, client.outputPath + "/query3.csv");
-                logger.info("Results written");
-
-            } finally {
-                HazelcastClient.shutdownAll();
-            }
+        try (ClientQuery3 client = new ClientQuery3()) {
+            client.executeQuery("query3",
+                    (hazelcastInstance) -> {
+                        City city = City.getCity(client.cityStr);
+                        return city.getQueryEngine().runQuery3(hazelcastInstance, Integer.parseInt(n), from, to);
+                    },
+                    (hazelcastInstance) -> {
+                        City city = City.getCity(client.cityStr);
+                        city.getQueryLoader().loadQuery3(hazelcastInstance, client.inputPath);
+                    }
+            );
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

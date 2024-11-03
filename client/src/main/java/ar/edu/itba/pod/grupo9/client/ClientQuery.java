@@ -1,6 +1,7 @@
 package ar.edu.itba.pod.grupo9.client;
 
 import ar.edu.itba.pod.grupo9.client.util.ArgParser;
+import ar.edu.itba.pod.grupo9.client.util.City;
 import com.opencsv.CSVWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 
@@ -77,6 +79,36 @@ public abstract class ClientQuery implements Closeable {
         return HazelcastClient.newHazelcastClient(clientConfig);
     }
 
+    protected <K, V> void executeQuery(
+            String queryType,
+            Function<HazelcastInstance, List<Map.Entry<K, V>>> queryExecutor,
+            Consumer<HazelcastInstance> dataLoader
+    ) {
+        try {
+            logTimestamp("Inicio de la lectura de los archivos de entrada");
+            logger.info("Loading data...");
+
+            dataLoader.accept(this.hazelcastInstance);
+
+            logTimestamp("Fin de lectura de los archivos de entrada");
+            logger.info("Data loaded");
+
+            logger.info("Running query...");
+            logTimestamp("Inicio de un trabajo MapReduce");
+            List<Map.Entry<K, V>> resultList = queryExecutor.apply(this.hazelcastInstance);
+            logTimestamp("Fin de un trabajo MapReduce");
+
+            logger.info("Query executed");
+            logger.info("Writing results...");
+            writeResults(resultList, this.outputPath + "/" + queryType + ".csv");
+            logger.info("Results written");
+        } catch (Exception e) {
+            logger.error("Error executing query", e);
+        } finally {
+            HazelcastClient.shutdownAll();
+        }
+    }
+
     protected abstract <K, V> void writeResults(List<Map.Entry<K, V>> rows, String outputPath);
 
     protected void writeToCSV(List<String[]> rows, String outputPath) {
@@ -98,7 +130,7 @@ public abstract class ClientQuery implements Closeable {
         String timestamp = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss:SSSS").format(new Date());
         String logEntry = timestamp + " - " + message;
 
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputPath + "/time.txt", true))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(this.outputPath + "/time.txt", true))) {
             writer.write(logEntry);
             writer.newLine();
         } catch (IOException e) {

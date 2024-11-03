@@ -1,8 +1,6 @@
 package ar.edu.itba.pod.grupo9.client;
 
 import ar.edu.itba.pod.grupo9.client.util.City;
-import ar.edu.itba.pod.grupo9.model.Pair;
-import com.hazelcast.client.HazelcastClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
@@ -20,30 +18,17 @@ public class ClientQuery1 extends ClientQuery{
 
     public static void main(String[] args) {
         try (ClientQuery1 client = new ClientQuery1()) {
-            try {
-                client.logTimestamp("Inicio de la lectura de los archivos de entrada");
-
-                logger.info("Loading data...");
-                City city = City.getCity(client.cityStr);
-                city.getQueryLoader().loadQuery1(client.hazelcastInstance, client.inputPath);
-
-                client.logTimestamp("Fin de lectura de los archivos de entrada");
-
-                logger.info("Data loaded");
-                logger.info("Running query...");
-                client.logTimestamp("Inicio de un trabajo MapReduce");
-                List<Map.Entry<Pair<String, String>, Integer>> resultList = city.getQueryEngine().runQuery1(client.hazelcastInstance);
-                client.logTimestamp("Fin de un trabajo MapReduce");
-
-                logger.info("Query executed");
-
-                logger.info("Writing results...");
-                client.writeResults(resultList, client.outputPath + "/query1.csv");
-
-                logger.info("Client execution completed.");
-            } finally {
-                HazelcastClient.shutdownAll();
-            }
+            client.executeQuery("query1",
+                    (hazelcastInstance) -> {
+                        City city = City.getCity(client.cityStr);
+                        return city.getQueryEngine().runQuery1(hazelcastInstance);
+                    },
+                    (hazelcastInstance) -> {
+                        City city = City.getCity(client.cityStr);
+                        city.getQueryLoader().loadQuery1(hazelcastInstance, client.inputPath);
+                    }
+            );
+            logger.info("Client execution completed.");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
