@@ -19,14 +19,23 @@ public class ClientQuery1 extends ClientQuery{
      }
 
     public static void main(String[] args) {
-        try (ClientQuery1 client = new ClientQuery1()){
+        try (ClientQuery1 client = new ClientQuery1()) {
             try {
+                client.logTimestamp("Inicio de la lectura de los archivos de entrada");
+
                 logger.info("Loading data...");
                 City city = City.getCity(client.cityStr);
                 city.getQueryLoader().loadQuery1(client.hazelcastInstance, client.inputPath);
 
+                client.logTimestamp("Fin de lectura de los archivos de entrada");
+
+                logger.info("Data loaded");
                 logger.info("Running query...");
+                client.logTimestamp("Inicio de un trabajo MapReduce");
                 List<Map.Entry<Pair<String, String>, Integer>> resultList = city.getQueryEngine().runQuery1(client.hazelcastInstance);
+                client.logTimestamp("Fin de un trabajo MapReduce");
+
+                logger.info("Query executed");
 
                 logger.info("Writing results...");
                 client.writeResults(resultList, client.outputPath + "/query1.csv");
@@ -39,6 +48,7 @@ public class ClientQuery1 extends ClientQuery{
             throw new RuntimeException(e);
         }
     }
+
 
     // Write results
     @Override

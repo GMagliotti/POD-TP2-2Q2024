@@ -5,10 +5,9 @@ import com.opencsv.CSVWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Closeable;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -92,6 +91,18 @@ public abstract class ClientQuery implements Closeable {
         } catch (IOException e) {
             logger.error("Error writing results", e);
             System.exit(1);
+        }
+    }
+
+    protected void logTimestamp(String message) {
+        String timestamp = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss:SSSS").format(new Date());
+        String logEntry = timestamp + " - " + message;
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputPath + "/time.txt", true))) {
+            writer.write(logEntry);
+            writer.newLine();
+        } catch (IOException e) {
+            logger.error("Error writing to time log", e);
         }
     }
 

@@ -40,7 +40,7 @@ public class ClientQuery3 extends ClientQuery{
 
         try(ClientQuery3 client = new ClientQuery3()) {
             try {
-                logger.info("Client started");
+                client.logTimestamp("Inicio de la lectura de los archivos de entrada");
                 logger.info("Loading data...");
 
                 City city = City.getCity(client.cityStr);
@@ -49,14 +49,16 @@ public class ClientQuery3 extends ClientQuery{
 
                 // Load data
                 city.getQueryLoader().loadQuery3(client.hazelcastInstance, client.inputPath);
+                client.logTimestamp("Fin de lectura de los archivos de entrada");
 
                 logger.info("Data loaded");
                 logger.info("Running query...");
-
+                client.logTimestamp("Inicio de un trabajo MapReduce");
                 // Solve query
                 List<Map.Entry<String, Double>> resultList = city.getQueryEngine().runQuery3(client.hazelcastInstance, Integer.parseInt(n), from, to);
-
+                client.logTimestamp("Fin de un trabajo MapReduce");
                 logger.info("Query executed");
+
                 logger.info("Writing results...");
 
                 // Write results
