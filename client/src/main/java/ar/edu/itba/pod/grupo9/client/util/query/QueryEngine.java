@@ -8,14 +8,15 @@ import ar.edu.itba.pod.grupo9.query1.InfractionAgencyCountCollator;
 import ar.edu.itba.pod.grupo9.query1.InfractionAgencyCountCombinerFactory;
 import ar.edu.itba.pod.grupo9.query1.InfractionAgencyCountMapper;
 import ar.edu.itba.pod.grupo9.query1.InfractionAgencyCountReducerFactory;
+import ar.edu.itba.pod.grupo9.query2.YtdEarningsCollator;
+import ar.edu.itba.pod.grupo9.query2.YtdEarningsCombinerFactory;
+import ar.edu.itba.pod.grupo9.query2.YtdEarningsMapper;
+import ar.edu.itba.pod.grupo9.query2.YtdEarningsReducerFactory;
 import ar.edu.itba.pod.grupo9.query3.RepeatOffenderCountCollator;
 import ar.edu.itba.pod.grupo9.query3.RepeatOffenderCountCombinerFactory;
 import ar.edu.itba.pod.grupo9.query3.RepeatOffenderCountMapper;
 import ar.edu.itba.pod.grupo9.query3.RepeatOffenderCountReducerFactory;
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.ICompletableFuture;
-import com.hazelcast.core.IMap;
-import com.hazelcast.core.MultiMap;
+import com.hazelcast.core.*;
 import com.hazelcast.mapreduce.Job;
 import com.hazelcast.mapreduce.JobTracker;
 import com.hazelcast.mapreduce.KeyValueSource;
@@ -39,6 +40,11 @@ public enum QueryEngine {
         }
 
         @Override
+        public List<Map.Entry<Pair<String, Pair<Integer, Integer>>, Double>> runQuery2(HazelcastInstance hazelcastInstance) {
+            return execQuery2(hazelcastInstance, City.NYC);
+        }
+
+        @Override
         public List<Map.Entry<String, Double>> runQuery3(HazelcastInstance hazelcastInstance, int n, LocalDate from, LocalDate to) {
             return execQuery3(hazelcastInstance, City.NYC, n, from, to);
         }
@@ -48,6 +54,11 @@ public enum QueryEngine {
         @Override
         public List<Map.Entry<Pair<String, String>, Integer>> runQuery1(HazelcastInstance hazelcastInstance) {
             return execQuery1(hazelcastInstance, City.CHI);
+        }
+
+        @Override
+        public List<Map.Entry<Pair<String, Pair<Integer, Integer>>, Double>> runQuery2(HazelcastInstance hazelcastInstance) {
+            return execQuery2(hazelcastInstance, City.CHI);
         }
 
         @Override
@@ -72,6 +83,30 @@ public enum QueryEngine {
                 .combiner(new RepeatOffenderCountCombinerFactory())
                 .reducer(new RepeatOffenderCountReducerFactory())
                 .submit(new RepeatOffenderCountCollator(n));
+
+        try {
+            return future.get();
+        } catch (Exception e) {
+            logger.error("Error getting future result", e);
+            System.exit(1);
+        }
+        return null;
+    }
+
+    private static List<Map.Entry<Pair<String, Pair<Integer, Integer>>, Double>> execQuery2(HazelcastInstance hazelcastInstance, City city) {
+        Properties prop = loadProperties();
+
+        MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets." + city.name().toLowerCase()));
+        ISet<String> agencies = hazelcastInstance.getSet(prop.getProperty("hz.collection.agencies." + city.name().toLowerCase()));
+        JobTracker jobTracker = hazelcastInstance.getJobTracker(prop.getProperty("hz.cluster.name"));
+        KeyValueSource<String, Ticket> source = KeyValueSource.fromMultiMap(tickets);
+        Job<String, Ticket> job = jobTracker.newJob(source);
+
+        ICompletableFuture<List<Map.Entry<Pair<String, Pair<Integer, Integer>>, Double>>> future = job
+                .mapper(new YtdEarningsMapper())
+                .combiner(new YtdEarningsCombinerFactory())
+                .reducer(new YtdEarningsReducerFactory())
+                .submit(new YtdEarningsCollator());
 
         try {
             return future.get();
@@ -123,5 +158,6 @@ public enum QueryEngine {
 
     public abstract List<Map.Entry<Pair<String, String>, Integer>> runQuery1(HazelcastInstance hazelcastInstance);
 
+    public abstract List<Map.Entry<Pair<String, Pair<Integer, Integer>>, Double>> runQuery2(HazelcastInstance hazelcastInstance);
     public abstract List<Map.Entry<String, Double>> runQuery3(HazelcastInstance hazelcastInstance, int n, LocalDate from, LocalDate to);
 }
