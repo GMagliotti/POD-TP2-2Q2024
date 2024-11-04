@@ -6,6 +6,7 @@ import ar.edu.itba.pod.grupo9.model.Infraction;
 import ar.edu.itba.pod.grupo9.model.Ticket;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
+import com.hazelcast.core.ISet;
 import com.hazelcast.core.MultiMap;
 import com.opencsv.*;
 import com.opencsv.exceptions.CsvValidationException;
@@ -25,6 +26,11 @@ public enum QueryLoader {
         }
 
         @Override
+        public void loadQuery2(HazelcastInstance hazelcastInstance, String inPath) {
+            loadDataQuery2(hazelcastInstance, inPath, City.NYC);
+        }
+
+        @Override
         public void loadQuery3(HazelcastInstance hazelcastInstance, String inPath) {
             loadDataQuery3(hazelcastInstance, inPath, City.NYC);
         }
@@ -33,6 +39,11 @@ public enum QueryLoader {
         @Override
         public void loadQuery1(HazelcastInstance hazelcastInstance, String inPath) {
             loadDataQuery1(hazelcastInstance, inPath, City.CHI);
+        }
+
+        @Override
+        public void loadQuery2(HazelcastInstance hazelcastInstance, String inPath) {
+            loadDataQuery2(hazelcastInstance, inPath, City.CHI);
         }
 
         @Override
@@ -50,6 +61,15 @@ public enum QueryLoader {
 
         loadTickets(tickets, inPath + "/" + city.getTicketsPath(), city);
         loadInfractions(infractions, inPath + "/" + city.getInfractionsPath(), city);
+    }
+
+    private static void loadDataQuery2(HazelcastInstance hazelcastInstance, String inPath, City city) {
+        Properties prop = loadProperties();
+        MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets." + city.name().toLowerCase()));
+        ISet<String> agencies = hazelcastInstance.getSet(prop.getProperty("hz.collection.agencies." + city.name().toLowerCase()));
+
+        loadTickets(tickets, inPath + "/" + city.getTicketsPath(), city);
+        loadAgencies(agencies, inPath + "/" + city.getAgenciesPath(), city);
     }
 
     private static void loadDataQuery3(HazelcastInstance hazelcastInstance, String inPath, City city) {
@@ -94,6 +114,25 @@ public enum QueryLoader {
         }
     }
 
+    private static void loadAgencies(ISet<String> agencies, String filePath, City city) {
+        logger.info("{} agencies loading started", city);
+        try (CSVReader reader = new CSVReaderBuilder(new FileReader(filePath))
+                .withCSVParser(new CSVParserBuilder().withSeparator(';').build())
+                .withSkipLines(1)
+                .build()) {
+
+            String[] line;
+            while ((line = reader.readNext()) != null) {
+                agencies.add(line[0]);
+            }
+        } catch (IOException | CsvValidationException e) {
+            logger.error("Error reading agencies file", e);
+            System.exit(1);
+        } finally {
+            logger.info("Agencies loading finished");
+        }
+    }
+
     private static void loadInfractions(IMap<String, Infraction> infractions, String filePath, City city) {
         logger.info("{} infractions loading started", city);
         try (CSVReader reader = new CSVReaderBuilder(new FileReader(filePath))
@@ -116,6 +155,8 @@ public enum QueryLoader {
 
 
     public abstract void loadQuery1(HazelcastInstance hazelcastInstance, String inPath);
+
+    public abstract void loadQuery2(HazelcastInstance hazelcastInstance, String inPath);
 
     public abstract void loadQuery3(HazelcastInstance hazelcastInstance, String inPath);
 }
