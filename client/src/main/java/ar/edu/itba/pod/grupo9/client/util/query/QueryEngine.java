@@ -141,12 +141,13 @@ public enum QueryEngine {
 
         MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets." + city.name().toLowerCase()));
         ISet<String> agencies = hazelcastInstance.getSet(prop.getProperty("hz.collection.agencies." + city.name().toLowerCase()));
+        ReplicatedMap<String, Integer> agenciesMap = hazelcastInstance.getReplicatedMap(prop.getProperty("hz.collection.agencies." + city.name().toLowerCase()));
         JobTracker jobTracker = hazelcastInstance.getJobTracker(prop.getProperty("hz.cluster.name"));
         KeyValueSource<String, Ticket> source = KeyValueSource.fromMultiMap(tickets);
         Job<String, Ticket> job = jobTracker.newJob(source);
 
         ICompletableFuture<List<Map.Entry<Pair<String, Pair<Integer, Integer>>, Double>>> future = job
-                .mapper(new YtdEarningsMapper())
+                .mapper(new YtdEarningsMapper(agenciesMap))
                 .combiner(new YtdEarningsCombinerFactory())
                 .reducer(new YtdEarningsReducerFactory())
                 .submit(new YtdEarningsCollator());
