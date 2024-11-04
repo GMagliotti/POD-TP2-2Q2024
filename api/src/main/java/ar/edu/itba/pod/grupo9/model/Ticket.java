@@ -43,28 +43,6 @@ public class Ticket implements DataSerializable {
         this.countyName = countyName;
     }
 
-    public static Ticket fromChiCsv(String[] line) {
-        return new Ticket(
-                line[3],
-                line[4],
-                Double.parseDouble(line[5]),
-                line[2],
-                LocalDate.parse(line[0], DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-                line[1]
-        );
-    }
-
-    public static Ticket fromNycCsv(String[] line) {
-        return new Ticket(
-                line[0],
-                line[1],
-                Double.parseDouble(line[2]),
-                line[3],
-                LocalDate.parse(line[4], DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                line[5]
-        );
-    }
-
     @Override
     public void writeData(ObjectDataOutput out) throws IOException {
         out.writeUTF(plate);

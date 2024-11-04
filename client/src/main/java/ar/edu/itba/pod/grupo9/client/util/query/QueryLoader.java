@@ -1,6 +1,7 @@
 package ar.edu.itba.pod.grupo9.client.util.query;
 
 import ar.edu.itba.pod.grupo9.client.util.City;
+import ar.edu.itba.pod.grupo9.client.util.parser.TicketParser;
 import ar.edu.itba.pod.grupo9.model.Infraction;
 import ar.edu.itba.pod.grupo9.model.Ticket;
 import com.hazelcast.core.HazelcastInstance;
@@ -82,7 +83,7 @@ public enum QueryLoader {
 
             String[] line;
             while ((line = reader.readNext()) != null) {
-                Ticket ticket = city == City.NYC ? Ticket.fromNycCsv(line) : Ticket.fromChiCsv(line);
+                Ticket ticket = city == City.NYC ? TicketParser.ticketFromNycCsv(line) : TicketParser.ticketFromChiCsv(line);
                 tickets.put(ticket.getCode(), ticket);
             }
         } catch (IOException | CsvValidationException e) {

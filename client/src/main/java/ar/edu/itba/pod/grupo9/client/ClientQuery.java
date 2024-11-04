@@ -1,7 +1,6 @@
 package ar.edu.itba.pod.grupo9.client;
 
-import ar.edu.itba.pod.grupo9.client.util.ArgParser;
-import ar.edu.itba.pod.grupo9.client.util.City;
+import ar.edu.itba.pod.grupo9.client.util.parser.ArgParser;
 import com.opencsv.CSVWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,7 +99,9 @@ public abstract class ClientQuery implements Closeable {
 
             logger.info("Query executed");
             logger.info("Writing results...");
+            logTimestamp("Inicio de la escritura de los resultados");
             writeResults(resultList, this.outputPath + "/" + queryType + ".csv");
+            logTimestamp("Fin de la escritura de los resultados");
             logger.info("Results written");
         } catch (Exception e) {
             logger.error("Error executing query", e);
@@ -136,6 +137,7 @@ public abstract class ClientQuery implements Closeable {
         } catch (IOException e) {
             logger.error("Error writing to time log", e);
         }
+        logger.info(message);
     }
 
     @Override

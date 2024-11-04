@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -34,34 +35,34 @@ public class RepeatOffenderCountCollator implements Collator<Map.Entry<Pair<Stri
     @Override
     public List<Map.Entry<String, Double>> collate(Iterable<Map.Entry<Pair<String, String>, Integer>> values) {
         logger.info("Collating RepeatOffenderCountCollator");
+
+        // Calculate total fines for each county
         Map<String, Integer> countyFines = StreamSupport.stream(values.spliterator(), false)
-                .collect(Collectors.groupingBy(e -> e.getKey().getSecond(), Collectors.summingInt(Map.Entry::getValue)));
-        //logger.info("County fines: {}", countyFines);
-        // create empty repeatOffenders map
-        Map<String, Integer> repeatOffenders = new java.util.HashMap<>(Map.of());
-        for (Map.Entry<String, Integer> entry : countyFines.entrySet()) {
-            //logger.info("County: {}, fines: {}", entry.getKey(), entry.getValue());
-            // create a Map<plate, count> for current county
-            Map<String, Integer> plateCount = StreamSupport.stream(values.spliterator(), false)
-                    .filter(e -> e.getKey().getSecond().equals(entry.getKey()))
-                    .collect(Collectors.groupingBy(e -> e.getKey().getFirst(), Collectors.summingInt(Map.Entry::getValue)));
-            //logger.info("Plate count: {}", plateCount);
-            // we increase by 1 the repeatOffenders count for each plate that has been fined more than n times
-            plateCount.forEach((plate, count) -> {
-                if (count >= n) {
-                    repeatOffenders.put(entry.getKey(), repeatOffenders.getOrDefault(entry.getKey(), 0) + 1);
-                }
-            });
-            //logger.info("Repeat offenders: {}", repeatOffenders);
-        }
-        //logger.info("Repeat offenders: {}", repeatOffenders);
+                .collect(Collectors.groupingBy(e -> e.getKey().getSecond(), Collectors.summingInt(value -> 1)));
+
+        // Calculate repeat offenders for each county
+        Map<String, Integer> repeatOffenders = StreamSupport.stream(values.spliterator(), false)
+                .collect(Collectors.groupingBy(e -> e.getKey().getSecond(), Collectors.summingInt(
+                        new ToIntFunction<Map.Entry<Pair<String, String>, Integer>>() {
+                            @Override
+                            public int applyAsInt(Map.Entry<Pair<String, String>, Integer> value) {
+                                if (value.getValue() >= n) {
+                                    logger.info("Checking {} with value {}", value.getKey(), value.getValue());
+                                }
+                                return value.getValue() >= n ? 1 : 0; // e -> e.getValue() >= n ? 1 : 0
+                            }
+                        }
+                )));
+
+        logger.info("Repeat offenders: {}", repeatOffenders);
+
+        // Calculate and log the ratio for each county
         return countyFines.entrySet().stream()
                 .map(e -> {
                     String county = e.getKey();
                     double totalFines = e.getValue();
                     double repeatOffenderCount = repeatOffenders.getOrDefault(county, 0);
                     double ratio = repeatOffenderCount / totalFines;
-                    // log with 10 decimal places
                     logger.info("County: {}, total fines: {}, repeat offenders: {}, ratio: {}", county, totalFines, repeatOffenderCount, ratio);
                     ratio = Math.floor(ratio * 100) / 100; // truncate to 2 decimal places
                     logger.info("Final ratio for county {}: {}", county, ratio);

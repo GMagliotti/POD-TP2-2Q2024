@@ -1,11 +1,10 @@
-package ar.edu.itba.pod.grupo9.client.util;
+package ar.edu.itba.pod.grupo9.client.util.parser;
 
 import org.apache.commons.lang3.time.DateUtils;
 
 import java.io.File;
 import java.text.ParseException;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 
 public class ArgParser {
     public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
