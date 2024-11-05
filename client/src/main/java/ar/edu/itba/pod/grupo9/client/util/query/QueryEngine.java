@@ -98,7 +98,7 @@ public enum QueryEngine {
         Job<String, Ticket> job = jobTracker.newJob(source);
 
         ICompletableFuture<List<Map.Entry<String, InfractionSummary>>> future = job
-                .mapper(new TopAmountInfractionDifferenceByAgencyMapper(agency))
+                .mapper(new TopAmountInfractionDifferenceByAgencyMapper(infractions, agency))
                 .combiner(new TopAmountInfractionDifferenceByAgencyCombinerFactory())
                 .reducer(new TopAmountInfractionDifferenceByAgencyReducerFactory())
                 .submit(new TopAmountInfractionDifferenceByAgencyCollator(n, infractions));
@@ -170,7 +170,7 @@ public enum QueryEngine {
         Job<String, Ticket> job = jobTracker.newJob(source);
 
         ICompletableFuture<List<Map.Entry<Pair<String, String>, Integer>>> future = job
-                .mapper(new InfractionAgencyCountMapper())
+                .mapper(new InfractionAgencyCountMapper(infractions))
                 .combiner(new InfractionAgencyCountCombinerFactory())
                 .reducer(new InfractionAgencyCountReducerFactory())
                 .submit(new InfractionAgencyCountCollator(infractions));
