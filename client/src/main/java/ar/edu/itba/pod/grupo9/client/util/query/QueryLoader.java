@@ -64,7 +64,7 @@ public enum QueryLoader {
     private static void loadDataQuery1(HazelcastInstance hazelcastInstance, String inPath, City city) {
         Properties prop = loadProperties();
         MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets." + city.name().toLowerCase()));
-        IMap<String, Infraction> infractions = hazelcastInstance.getMap(prop.getProperty("hz.collection.infractions." + city.name().toLowerCase()));
+        ReplicatedMap<String, Infraction> infractions = hazelcastInstance.getReplicatedMap(prop.getProperty("hz.collection.infractions." + city.name().toLowerCase()));
 
         loadTickets(tickets, inPath + "/" + city.getTicketsPath(), city);
         loadInfractions(infractions, inPath + "/" + city.getInfractionsPath(), city);
@@ -90,7 +90,7 @@ public enum QueryLoader {
         Properties prop = loadProperties();
 
         MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets." + city.name().toLowerCase()));
-        IMap<String, Infraction> infractions = hazelcastInstance.getMap(prop.getProperty("hz.collection.infractions." + city.name().toLowerCase()));
+        ReplicatedMap<String, Infraction> infractions = hazelcastInstance.getReplicatedMap(prop.getProperty("hz.collection.infractions." + city.name().toLowerCase()));
         ReplicatedMap<String, Integer> agencies = hazelcastInstance.getReplicatedMap(prop.getProperty("hz.collection.agencies." + city.name().toLowerCase()));
 
         loadTickets(tickets, inPath + "/" + city.getTicketsPath(), city);
@@ -153,7 +153,7 @@ public enum QueryLoader {
         }
     }
 
-    private static void loadInfractions(IMap<String, Infraction> infractions, String filePath, City city) {
+    private static void loadInfractions(ReplicatedMap<String, Infraction> infractions, String filePath, City city) {
         logger.info("{} infractions loading started", city);
         try (CSVReader reader = new CSVReaderBuilder(new FileReader(filePath))
                 .withCSVParser(new CSVParserBuilder().withSeparator(';').build())
