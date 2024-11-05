@@ -17,6 +17,29 @@ public class Server {
     public static void main(String[] args) {
         logger.info(" Server Starting ...");
 
+        String address = "192.168.1.*";
+        int port = 5701;
+
+        // Get address from system property
+        String addressProperty = System.getProperty("address");
+        if (addressProperty != null) {
+            try {
+                address = addressProperty;
+            } catch (NumberFormatException e) {
+                logger.error("Invalid port number format, using default port: " + port);
+            }
+        }
+
+        // Get port from system property
+        String portProperty = System.getProperty("port");
+        if (portProperty != null) {
+            try {
+                port = Integer.parseInt(portProperty);
+            } catch (NumberFormatException e) {
+                logger.error("Invalid port number format, using default port: " + port);
+            }
+        }
+
         // get properties file
         try(
                 InputStream inputStream = Server.class.getClassLoader().getResourceAsStream("config.properties")
@@ -43,9 +66,12 @@ public class Server {
             JoinConfig joinConfig = new JoinConfig().setMulticastConfig(multicastConfig);
 
             InterfacesConfig interfacesConfig = new InterfacesConfig()
-                    .setInterfaces(Collections.singletonList("127.0.0.*")).setEnabled(true);
+                    .setInterfaces(Collections.singletonList(address));
 
-            NetworkConfig networkConfig = new NetworkConfig().setInterfaces(interfacesConfig).setJoin(joinConfig);
+            NetworkConfig networkConfig = new NetworkConfig().setInterfaces(interfacesConfig)
+                    .setJoin(joinConfig)
+                    .setPort(port);
+
 
             config.setNetworkConfig(networkConfig);
 
