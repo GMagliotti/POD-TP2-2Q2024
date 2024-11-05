@@ -4,10 +4,7 @@ import ar.edu.itba.pod.grupo9.client.util.City;
 import ar.edu.itba.pod.grupo9.client.util.parser.TicketParser;
 import ar.edu.itba.pod.grupo9.model.Infraction;
 import ar.edu.itba.pod.grupo9.model.Ticket;
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IMap;
-import com.hazelcast.core.ISet;
-import com.hazelcast.core.MultiMap;
+import com.hazelcast.core.*;
 import com.opencsv.*;
 import com.opencsv.exceptions.CsvValidationException;
 import org.slf4j.Logger;
@@ -76,7 +73,7 @@ public enum QueryLoader {
     private static void loadDataQuery2(HazelcastInstance hazelcastInstance, String inPath, City city) {
         Properties prop = loadProperties();
         MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets." + city.name().toLowerCase()));
-        ISet<String> agencies = hazelcastInstance.getSet(prop.getProperty("hz.collection.agencies." + city.name().toLowerCase()));
+        ReplicatedMap<String, Integer> agencies = hazelcastInstance.getReplicatedMap(prop.getProperty("hz.collection.agencies." + city.name().toLowerCase()));
 
         loadTickets(tickets, inPath + "/" + city.getTicketsPath(), city);
         loadAgencies(agencies, inPath + "/" + city.getAgenciesPath(), city);
@@ -94,7 +91,7 @@ public enum QueryLoader {
 
         MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets." + city.name().toLowerCase()));
         IMap<String, Infraction> infractions = hazelcastInstance.getMap(prop.getProperty("hz.collection.infractions." + city.name().toLowerCase()));
-        ISet<String> agencies = hazelcastInstance.getSet(prop.getProperty("hz.collection.agencies." + city.name().toLowerCase()));
+        ReplicatedMap<String, Integer> agencies = hazelcastInstance.getReplicatedMap(prop.getProperty("hz.collection.agencies." + city.name().toLowerCase()));
 
         loadTickets(tickets, inPath + "/" + city.getTicketsPath(), city);
         loadInfractions(infractions, inPath + "/" + city.getInfractionsPath(), city);
@@ -137,7 +134,7 @@ public enum QueryLoader {
         }
     }
 
-    private static void loadAgencies(ISet<String> agencies, String filePath, City city) {
+    private static void loadAgencies(ReplicatedMap<String, Integer> agencies, String filePath, City city) {
         logger.info("{} agencies loading started", city);
         try (CSVReader reader = new CSVReaderBuilder(new FileReader(filePath))
                 .withCSVParser(new CSVParserBuilder().withSeparator(';').build())
@@ -146,7 +143,7 @@ public enum QueryLoader {
 
             String[] line;
             while ((line = reader.readNext()) != null) {
-                agencies.add(line[0]);
+                agencies.put(line[0], 1);
             }
         } catch (IOException | CsvValidationException e) {
             logger.error("Error reading agencies file", e);
