@@ -34,6 +34,11 @@ public enum QueryLoader {
         public void loadQuery3(HazelcastInstance hazelcastInstance, String inPath) {
             loadDataQuery3(hazelcastInstance, inPath, City.NYC);
         }
+
+        @Override
+        public void loadQuery4(HazelcastInstance hazelcastInstance, String inPath) {
+            loadDataQuery4(hazelcastInstance, inPath, City.NYC);
+        }
     },
     CHI {
         @Override
@@ -49,6 +54,11 @@ public enum QueryLoader {
         @Override
         public void loadQuery3(HazelcastInstance hazelcastInstance, String inPath) {
             loadDataQuery3(hazelcastInstance, inPath, City.CHI);
+        }
+
+        @Override
+        public void loadQuery4(HazelcastInstance hazelcastInstance, String inPath) {
+            loadDataQuery4(hazelcastInstance, inPath, City.CHI);
         }
     };
 
@@ -77,6 +87,19 @@ public enum QueryLoader {
         MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets." + city.name().toLowerCase()));
 
         loadTickets(tickets, inPath + "/" + city.getTicketsPath(), city);
+    }
+
+    private static void loadDataQuery4(HazelcastInstance hazelcastInstance, String inPath, City city) {
+        Properties prop = loadProperties();
+
+        MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets." + city.name().toLowerCase()));
+        IMap<String, Infraction> infractions = hazelcastInstance.getMap(prop.getProperty("hz.collection.infractions." + city.name().toLowerCase()));
+        ISet<String> agencies = hazelcastInstance.getSet(prop.getProperty("hz.collection.agencies." + city.name().toLowerCase()));
+
+        loadTickets(tickets, inPath + "/" + city.getTicketsPath(), city);
+        loadInfractions(infractions, inPath + "/" + city.getInfractionsPath(), city);
+        loadAgencies(agencies, inPath + "/" + city.getAgenciesPath(), city);
+
     }
 
     private static Properties loadProperties() {
@@ -157,6 +180,8 @@ public enum QueryLoader {
     public abstract void loadQuery1(HazelcastInstance hazelcastInstance, String inPath);
 
     public abstract void loadQuery2(HazelcastInstance hazelcastInstance, String inPath);
+
+    public abstract void loadQuery4(HazelcastInstance hazelcastInstance, String inPath);
 
     public abstract void loadQuery3(HazelcastInstance hazelcastInstance, String inPath);
 }
