@@ -92,7 +92,7 @@ public enum QueryEngine {
         Properties prop = loadProperties();
 
         MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets." + city.name().toLowerCase()));
-        IMap<String, Infraction> infractions = hazelcastInstance.getMap(prop.getProperty("hz.collection.infractions." + city.name().toLowerCase()));
+        ReplicatedMap<String, Infraction> infractions = hazelcastInstance.getReplicatedMap(prop.getProperty("hz.collection.infractions." + city.name().toLowerCase()));
         JobTracker jobTracker = hazelcastInstance.getJobTracker(prop.getProperty("hz.cluster.name"));
         KeyValueSource<String, Ticket> source = KeyValueSource.fromMultiMap(tickets);
         Job<String, Ticket> job = jobTracker.newJob(source);
@@ -164,7 +164,7 @@ public enum QueryEngine {
         Properties prop = loadProperties();
 
         MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets." + city.name().toLowerCase()));
-        IMap<String, Infraction> infractions = hazelcastInstance.getMap(prop.getProperty("hz.collection.infractions." + city.name().toLowerCase()));
+        ReplicatedMap<String, Infraction> infractions = hazelcastInstance.getReplicatedMap(prop.getProperty("hz.collection.infractions." + city.name().toLowerCase()));
         JobTracker jobTracker = hazelcastInstance.getJobTracker(prop.getProperty("hz.cluster.name"));
         KeyValueSource<String, Ticket> source = KeyValueSource.fromMultiMap(tickets);
         Job<String, Ticket> job = jobTracker.newJob(source);
