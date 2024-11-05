@@ -4,8 +4,9 @@ import ar.edu.itba.pod.grupo9.model.Pair;
 import com.hazelcast.mapreduce.Collator;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+
+@SuppressWarnings("deprecation")
 
 public class YtdEarningsCollator implements Collator<
         Map.Entry<Pair<String, Pair<Integer, Integer>>, Double>,

@@ -1,10 +1,10 @@
 package ar.edu.itba.pod.grupo9.query2;
 
 import ar.edu.itba.pod.grupo9.model.Pair;
-import ar.edu.itba.pod.grupo9.query1.InfractionAgencyCountReducerFactory;
 import com.hazelcast.mapreduce.Reducer;
 import com.hazelcast.mapreduce.ReducerFactory;
 
+@SuppressWarnings("deprecation")
 public class YtdEarningsReducerFactory implements ReducerFactory<Pair<String, Pair<Integer, Integer>>, Double, Double> {
     @Override
     public Reducer<Double, Double> newReducer(Pair<String, Pair<Integer, Integer>> stringPairPair) {

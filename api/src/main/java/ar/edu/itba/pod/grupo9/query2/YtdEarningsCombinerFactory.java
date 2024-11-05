@@ -4,6 +4,7 @@ import ar.edu.itba.pod.grupo9.model.Pair;
 import com.hazelcast.mapreduce.Combiner;
 import com.hazelcast.mapreduce.CombinerFactory;
 
+@SuppressWarnings("deprecation")
 public class YtdEarningsCombinerFactory implements CombinerFactory<Pair<String, Pair<Integer,Integer>>, Double, Double> {
     @Override
     public Combiner<Double, Double> newCombiner(Pair<String, Pair<Integer, Integer>> stringPairPair) {

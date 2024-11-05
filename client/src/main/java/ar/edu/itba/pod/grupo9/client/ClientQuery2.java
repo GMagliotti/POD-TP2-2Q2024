@@ -1,13 +1,11 @@
 package ar.edu.itba.pod.grupo9.client;
 
-import ar.edu.itba.pod.grupo9.client.util.ArgParser;
 import ar.edu.itba.pod.grupo9.client.util.City;
 import ar.edu.itba.pod.grupo9.model.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
