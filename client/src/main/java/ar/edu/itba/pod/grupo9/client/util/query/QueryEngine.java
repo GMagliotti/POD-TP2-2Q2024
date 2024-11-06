@@ -92,13 +92,14 @@ public enum QueryEngine {
         Properties prop = loadProperties();
 
         MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets." + city.name().toLowerCase()));
-        ReplicatedMap<String, Infraction> infractions = hazelcastInstance.getReplicatedMap(prop.getProperty("hz.collection.infractions." + city.name().toLowerCase()));
+        String replMapString = prop.getProperty("hz.collection.infractions." + city.name().toLowerCase());
+        ReplicatedMap<String, Infraction> infractions = hazelcastInstance.getReplicatedMap(replMapString);
         JobTracker jobTracker = hazelcastInstance.getJobTracker(prop.getProperty("hz.cluster.name"));
         KeyValueSource<String, Ticket> source = KeyValueSource.fromMultiMap(tickets);
         Job<String, Ticket> job = jobTracker.newJob(source);
 
         ICompletableFuture<List<Map.Entry<String, InfractionSummary>>> future = job
-                .mapper(new TopAmountInfractionDifferenceByAgencyMapper(infractions, agency))
+                .mapper(new TopAmountInfractionDifferenceByAgencyMapper(agency, replMapString))
                 .combiner(new TopAmountInfractionDifferenceByAgencyCombinerFactory())
                 .reducer(new TopAmountInfractionDifferenceByAgencyReducerFactory())
                 .submit(new TopAmountInfractionDifferenceByAgencyCollator(n, infractions));
@@ -140,13 +141,14 @@ public enum QueryEngine {
         Properties prop = loadProperties();
 
         MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets." + city.name().toLowerCase()));
-        ReplicatedMap<String, Integer> agenciesMap = hazelcastInstance.getReplicatedMap(prop.getProperty("hz.collection.agencies." + city.name().toLowerCase()));
+        String agenciesReplMap = prop.getProperty("hz.collection.agencies." + city.name().toLowerCase());
+        ReplicatedMap<String, Integer> agenciesMap = hazelcastInstance.getReplicatedMap(agenciesReplMap);
         JobTracker jobTracker = hazelcastInstance.getJobTracker(prop.getProperty("hz.cluster.name"));
         KeyValueSource<String, Ticket> source = KeyValueSource.fromMultiMap(tickets);
         Job<String, Ticket> job = jobTracker.newJob(source);
 
         ICompletableFuture<List<Map.Entry<Pair<String, Pair<Integer, Integer>>, Double>>> future = job
-                .mapper(new YtdEarningsMapper(agenciesMap))
+                .mapper(new YtdEarningsMapper(agenciesReplMap))
                 .combiner(new YtdEarningsCombinerFactory())
                 .reducer(new YtdEarningsReducerFactory())
                 .submit(new YtdEarningsCollator());
@@ -164,13 +166,16 @@ public enum QueryEngine {
         Properties prop = loadProperties();
 
         MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets." + city.name().toLowerCase()));
-        ReplicatedMap<String, Infraction> infractions = hazelcastInstance.getReplicatedMap(prop.getProperty("hz.collection.infractions." + city.name().toLowerCase()));
+        String infractionsReplMap = prop.getProperty("hz.collection.infractions." + city.name().toLowerCase());
+        String agenciesReplMap = prop.getProperty("hz.collection.agencies." + city.name().toLowerCase());
+        ReplicatedMap<String, Infraction> infractions = hazelcastInstance.getReplicatedMap(infractionsReplMap);
+        ReplicatedMap<String, Integer> agencies = hazelcastInstance.getReplicatedMap(agenciesReplMap);
         JobTracker jobTracker = hazelcastInstance.getJobTracker(prop.getProperty("hz.cluster.name"));
         KeyValueSource<String, Ticket> source = KeyValueSource.fromMultiMap(tickets);
         Job<String, Ticket> job = jobTracker.newJob(source);
 
         ICompletableFuture<List<Map.Entry<Pair<String, String>, Integer>>> future = job
-                .mapper(new InfractionAgencyCountMapper(infractions))
+                .mapper(new InfractionAgencyCountMapper(infractionsReplMap, agenciesReplMap))
                 .combiner(new InfractionAgencyCountCombinerFactory())
                 .reducer(new InfractionAgencyCountReducerFactory())
                 .submit(new InfractionAgencyCountCollator(infractions));
