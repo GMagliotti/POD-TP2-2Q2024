@@ -3,24 +3,23 @@ package ar.edu.itba.pod.grupo9.query4;
 import ar.edu.itba.pod.grupo9.model.Infraction;
 import ar.edu.itba.pod.grupo9.model.InfractionSummary;
 import ar.edu.itba.pod.grupo9.model.Ticket;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.core.ReplicatedMap;
 import com.hazelcast.mapreduce.Context;
 import com.hazelcast.mapreduce.Mapper;
 
 
 @SuppressWarnings("deprecation")
-public class TopAmountInfractionDifferenceByAgencyMapper implements Mapper<String, Ticket, String, InfractionSummary> {
+public class TopAmountInfractionDifferenceByAgencyMapper implements Mapper<String, Ticket, String, InfractionSummary>,
+        HazelcastInstanceAware {
+    private final String agency;
+    private final String infractionsMapName;
+    private transient HazelcastInstance hz;
 
-    private transient String agency;
-    private transient ReplicatedMap<String, Infraction> validInfractions;
-
-    public TopAmountInfractionDifferenceByAgencyMapper() {
-        // required by hazelcast
-    }
-
-    public TopAmountInfractionDifferenceByAgencyMapper(ReplicatedMap<String, Infraction> infractions, final String agency) {
+    public TopAmountInfractionDifferenceByAgencyMapper(final String agency, final String infractionsMapName) {
+        this.infractionsMapName = infractionsMapName;
         this.agency = agency.replace("_", " ");
-        this.validInfractions = infractions;
     }
 
     @Override
@@ -31,8 +30,13 @@ public class TopAmountInfractionDifferenceByAgencyMapper implements Mapper<Strin
         }
     }
 
+    @Override
+    public void setHazelcastInstance(HazelcastInstance hz) {
+        this.hz = hz;
+    }
+
     private boolean isRelevantEntry(Ticket ticket) {
-        return validInfractions == null || validInfractions.containsKey(ticket.getCode());
+        return hz.<String, Infraction>getReplicatedMap(infractionsMapName).containsKey(ticket.getCode());
     }
 }
 
