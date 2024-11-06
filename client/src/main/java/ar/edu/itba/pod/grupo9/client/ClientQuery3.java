@@ -50,7 +50,9 @@ public class ClientQuery3 extends ClientQuery{
         rows.add(new String[]{"County", "Percentage"});
 
         for (Map.Entry<K, V> entry : resultList) {
-            rows.add(new String[]{entry.getKey().toString(), entry.getValue().toString()});
+            double percentage = 100 * (Double) entry.getValue();
+            String percentageString = String.format("%.2f", percentage) + "%";
+            rows.add(new String[]{entry.getKey().toString(), percentageString});
         }
 
         writeToCSV(rows, outputPath);
