@@ -26,7 +26,7 @@ public class ClientQuery2 extends ClientQuery {
                     },
                     (hazelcastInstance) -> {
                         City city = City.getCity(client.cityStr);
-                        city.getQueryLoader().loadQuery1(hazelcastInstance, client.inputPath);
+                        city.getQueryLoader().loadQuery2(hazelcastInstance, client.inputPath);
                     }
             );
             logger.info("Client execution completed.");
