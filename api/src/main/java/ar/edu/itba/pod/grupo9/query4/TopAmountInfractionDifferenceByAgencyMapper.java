@@ -11,28 +11,18 @@ import com.hazelcast.mapreduce.Mapper;
 @SuppressWarnings("deprecation")
 public class TopAmountInfractionDifferenceByAgencyMapper implements Mapper<String, Ticket, String, InfractionSummary> {
 
-    private transient String agency;
-    private transient ReplicatedMap<String, Infraction> validInfractions;
+    private final String agency;
 
-    public TopAmountInfractionDifferenceByAgencyMapper() {
-        // required by hazelcast
-    }
-
-    public TopAmountInfractionDifferenceByAgencyMapper(ReplicatedMap<String, Infraction> infractions, final String agency) {
+    public TopAmountInfractionDifferenceByAgencyMapper(final String agency) {
         this.agency = agency.replace("_", " ");
-        this.validInfractions = infractions;
     }
 
     @Override
     public void map(String s, Ticket ticket, Context<String, InfractionSummary> context) {
-        if (ticket.getIssuingAgency().equals(agency) && (isRelevantEntry(ticket))) {
+        if (ticket.getIssuingAgency().equals(agency)) {
             double amount = ticket.getFineAmount();
             context.emit(ticket.getCode(), new InfractionSummary(amount, amount, 0.0));
         }
-    }
-
-    private boolean isRelevantEntry(Ticket ticket) {
-        return validInfractions == null || validInfractions.containsKey(ticket.getCode());
     }
 }
 

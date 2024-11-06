@@ -14,6 +14,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.function.Predicate;
 
 public enum QueryLoader {
     NYC {
@@ -66,8 +67,8 @@ public enum QueryLoader {
         MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets." + city.name().toLowerCase()));
         ReplicatedMap<String, Infraction> infractions = hazelcastInstance.getReplicatedMap(prop.getProperty("hz.collection.infractions." + city.name().toLowerCase()));
 
-        loadTickets(tickets, inPath + "/" + city.getTicketsPath(), city);
         loadInfractions(infractions, inPath + "/" + city.getInfractionsPath(), city);
+        loadTicketsWithPredicate(tickets, inPath + "/" + city.getTicketsPath(), city, ticket -> infractions.containsKey(ticket.getCode()));
     }
 
     private static void loadDataQuery2(HazelcastInstance hazelcastInstance, String inPath, City city) {
@@ -75,8 +76,8 @@ public enum QueryLoader {
         MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets." + city.name().toLowerCase()));
         ReplicatedMap<String, Integer> agencies = hazelcastInstance.getReplicatedMap(prop.getProperty("hz.collection.agencies." + city.name().toLowerCase()));
 
-        loadTickets(tickets, inPath + "/" + city.getTicketsPath(), city);
         loadAgencies(agencies, inPath + "/" + city.getAgenciesPath(), city);
+        loadTicketsWithPredicate(tickets, inPath + "/" + city.getAgenciesPath(), city, ticket -> agencies.containsKey(ticket.getIssuingAgency()));
     }
 
     private static void loadDataQuery3(HazelcastInstance hazelcastInstance, String inPath, City city) {
@@ -93,8 +94,8 @@ public enum QueryLoader {
         ReplicatedMap<String, Infraction> infractions = hazelcastInstance.getReplicatedMap(prop.getProperty("hz.collection.infractions." + city.name().toLowerCase()));
         ReplicatedMap<String, Integer> agencies = hazelcastInstance.getReplicatedMap(prop.getProperty("hz.collection.agencies." + city.name().toLowerCase()));
 
-        loadTickets(tickets, inPath + "/" + city.getTicketsPath(), city);
         loadInfractions(infractions, inPath + "/" + city.getInfractionsPath(), city);
+        loadTicketsWithPredicate(tickets, inPath + "/" + city.getTicketsPath(), city, ticket -> infractions.containsKey(ticket.getCode()));
         loadAgencies(agencies, inPath + "/" + city.getAgenciesPath(), city);
 
     }
@@ -112,6 +113,28 @@ public enum QueryLoader {
             System.exit(1);
         }
         return prop;
+    }
+
+    private static void loadTicketsWithPredicate(MultiMap<String, Ticket> tickets, String filePath, City city, Predicate<Ticket> filter) {
+        logger.info("{} tickets loading started", city);
+        try (CSVReader reader = new CSVReaderBuilder(new FileReader(filePath))
+                .withCSVParser(new CSVParserBuilder().withSeparator(';').build())
+                .withSkipLines(1)
+                .build()) {
+
+            String[] line;
+            while ((line = reader.readNext()) != null) {
+                Ticket ticket = city == City.NYC ? TicketParser.ticketFromNycCsv(line) : TicketParser.ticketFromChiCsv(line);
+                if (filter.test(ticket)) {
+                    tickets.put(ticket.getCode(), ticket);
+                }
+            }
+        } catch (IOException | CsvValidationException e) {
+            logger.error("Error reading tickets file", e);
+            System.exit(1);
+        } finally {
+            logger.info("{} tickets loading finished", city);
+        }
     }
 
     private static void loadTickets(MultiMap<String, Ticket> tickets, String filePath, City city) {

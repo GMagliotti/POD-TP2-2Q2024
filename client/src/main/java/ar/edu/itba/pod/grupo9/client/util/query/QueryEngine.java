@@ -98,7 +98,7 @@ public enum QueryEngine {
         Job<String, Ticket> job = jobTracker.newJob(source);
 
         ICompletableFuture<List<Map.Entry<String, InfractionSummary>>> future = job
-                .mapper(new TopAmountInfractionDifferenceByAgencyMapper(infractions, agency))
+                .mapper(new TopAmountInfractionDifferenceByAgencyMapper(agency))
                 .combiner(new TopAmountInfractionDifferenceByAgencyCombinerFactory())
                 .reducer(new TopAmountInfractionDifferenceByAgencyReducerFactory())
                 .submit(new TopAmountInfractionDifferenceByAgencyCollator(n, infractions));
@@ -140,13 +140,12 @@ public enum QueryEngine {
         Properties prop = loadProperties();
 
         MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets." + city.name().toLowerCase()));
-        ReplicatedMap<String, Integer> agenciesMap = hazelcastInstance.getReplicatedMap(prop.getProperty("hz.collection.agencies." + city.name().toLowerCase()));
         JobTracker jobTracker = hazelcastInstance.getJobTracker(prop.getProperty("hz.cluster.name"));
         KeyValueSource<String, Ticket> source = KeyValueSource.fromMultiMap(tickets);
         Job<String, Ticket> job = jobTracker.newJob(source);
 
         ICompletableFuture<List<Map.Entry<Pair<String, Pair<Integer, Integer>>, Double>>> future = job
-                .mapper(new YtdEarningsMapper(agenciesMap))
+                .mapper(new YtdEarningsMapper())
                 .combiner(new YtdEarningsCombinerFactory())
                 .reducer(new YtdEarningsReducerFactory())
                 .submit(new YtdEarningsCollator());
@@ -170,7 +169,7 @@ public enum QueryEngine {
         Job<String, Ticket> job = jobTracker.newJob(source);
 
         ICompletableFuture<List<Map.Entry<Pair<String, String>, Integer>>> future = job
-                .mapper(new InfractionAgencyCountMapper(infractions))
+                .mapper(new InfractionAgencyCountMapper())
                 .combiner(new InfractionAgencyCountCombinerFactory())
                 .reducer(new InfractionAgencyCountReducerFactory())
                 .submit(new InfractionAgencyCountCollator(infractions));
