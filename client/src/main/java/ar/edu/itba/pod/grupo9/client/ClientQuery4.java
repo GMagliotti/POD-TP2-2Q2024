@@ -1,6 +1,7 @@
 package ar.edu.itba.pod.grupo9.client;
 
 import ar.edu.itba.pod.grupo9.client.util.City;
+import ar.edu.itba.pod.grupo9.client.util.parser.ArgParser;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -16,6 +17,8 @@ public class ClientQuery4 extends ClientQuery {
     public static void main(String[] args) {
         String n = System.getProperty("n");
         String agency = System.getProperty("agency");
+
+        ArgParser.validateQuery4Properties(n, agency);
 
         try (ClientQuery4 client = new ClientQuery4()) {
             client.executeQuery("query4",
