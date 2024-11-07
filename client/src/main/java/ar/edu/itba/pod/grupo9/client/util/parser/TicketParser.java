@@ -27,4 +27,26 @@ public class TicketParser {
                 line[5]
         );
     }
+
+    public static Ticket ticketFromNycCsvOptimized(String[] line) {
+        return new Ticket(
+                null,
+                line[1],
+                0.0,
+                line[3],
+                LocalDate.EPOCH,
+                null
+        );
+    }
+
+    public static Ticket ticketFromChiCsvOptimized(String[] line) {
+        return new Ticket(
+                null,
+                line[4],
+                0.0,
+                line[2],
+                LocalDate.EPOCH,
+                null
+        );
+    }
 }

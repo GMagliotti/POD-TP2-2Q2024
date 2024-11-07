@@ -17,7 +17,7 @@ public class Server {
     public static void main(String[] args) {
         logger.info(" Server Starting ...");
 
-        String address = "192.168.1.*";
+        String address = "127.0.0.*";
         int port = 5701;
 
         // Get address from system property

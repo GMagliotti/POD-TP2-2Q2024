@@ -134,6 +134,26 @@ public enum QueryLoader {
         }
     }
 
+    private static void loadTicketsQuery1Optimized(MultiMap<String, Ticket> tickets, String filePath, City city) {
+        logger.info("{} tickets loading started", city);
+        try (CSVReader reader = new CSVReaderBuilder(new FileReader(filePath))
+                .withCSVParser(new CSVParserBuilder().withSeparator(';').build())
+                .withSkipLines(1)
+                .build()) {
+
+            String[] line;
+            while ((line = reader.readNext()) != null) {
+                Ticket ticket = city == City.NYC ? TicketParser.ticketFromNycCsvOptimized(line) : TicketParser.ticketFromChiCsvOptimized(line);
+                tickets.put(ticket.getCode(), ticket);
+            }
+        } catch (IOException | CsvValidationException e) {
+            logger.error("Error reading tickets file", e);
+            System.exit(1);
+        } finally {
+            logger.info("{} tickets loading finished", city);
+        }
+    }
+
     private static void loadAgencies(ReplicatedMap<String, Integer> agencies, String filePath, City city) {
         logger.info("{} agencies loading started", city);
         try (CSVReader reader = new CSVReaderBuilder(new FileReader(filePath))
