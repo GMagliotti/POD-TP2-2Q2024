@@ -22,6 +22,7 @@ class InfractionAgencyCountCollatorTest {
         codeToDescription = new HashMap<>();
         codeToDescription.put("INF001", new Infraction("INF001", "Speeding"));
         codeToDescription.put("INF002", new Infraction("INF002", "Parking Violation"));
+        codeToDescription.put("INF003", new Infraction("INF003", null));
 
         // Initialize the collator with the codeToDescription map
         collator = new InfractionAgencyCountCollator(codeToDescription);
@@ -75,7 +76,7 @@ class InfractionAgencyCountCollatorTest {
     void testCollate_DefaultsToEmptyDescriptionWhenNoMappingExists() {
         // Arrange
         List<Map.Entry<Pair<String, String>, Integer>> input = Collections.singletonList(
-                Map.entry(new Pair<>("UNKNOWN_CODE", "AgencyX"), 20)
+                Map.entry(new Pair<>("INF003", "AgencyX"), 20)
         );
 
         // Act
