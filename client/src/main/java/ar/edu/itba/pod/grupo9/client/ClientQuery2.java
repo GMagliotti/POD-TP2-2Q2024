@@ -48,7 +48,7 @@ public class ClientQuery2 extends ClientQuery {
             rows.add(new String[]{e.getKey().getFirst(),
                     e.getKey().getSecond().getFirst().toString(),
                     e.getKey().getSecond().getSecond().toString(),
-                    e.getValue().toString()});
+                    String.valueOf(e.getValue().intValue())});
         }
 
         writeToCSV(rows, outputPath);
