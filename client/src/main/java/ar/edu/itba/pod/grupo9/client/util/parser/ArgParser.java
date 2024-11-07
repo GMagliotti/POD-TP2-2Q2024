@@ -137,4 +137,37 @@ public class ArgParser {
         }
     }
 
+    public static void validateQuery4Properties(String n, String agency) {
+        // n must be a number
+        if (n == null || n.isEmpty() || !n.matches("\\d+")) {
+            //throw new IllegalArgumentException("Invalid n: " + n);
+            System.err.println("Invalid n: " + n);
+            System.exit(1);
+        }
+        try {
+            int nInt = Integer.parseInt(n);
+            if (nInt < 2) {
+                //throw new IllegalArgumentException("n must be greater or equal to 2");
+                System.err.println("n must be greater or equal to 2");
+                System.exit(1);
+            }
+        } catch (NumberFormatException e) {
+            //throw new IllegalArgumentException("Invalid n: " + n);
+            System.err.println("Invalid n: " + n);
+            System.exit(1);
+        }
+
+        try {
+            if (agency == null || agency.isEmpty()) {
+                //throw new IllegalArgumentException("Invalid from date: " + fromDate);
+                System.err.println("Agency is either empty or was not declared");
+                System.exit(1);
+            }
+        } catch (Exception e) {
+            //throw new IllegalArgumentException("Invalid date format. Use format: dd/MM/yyyy");
+            System.err.println("Unknown error while parsing arguments");
+            System.exit(1);
+        }
+    }
+
 }

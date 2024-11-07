@@ -40,7 +40,7 @@ public class ClientQuery2 extends ClientQuery {
     @Override
     protected <K, V> void writeResults(List<Map.Entry<K, V>> resultList, String outputPath) {
         List<String[]> rows = new ArrayList<>();
-        rows.add(new String[]{"Agency", "Year", "Month", "Total earnings"});
+        rows.add(new String[]{"Agency", "Year", "Month", "YTD"});
 
         for (Map.Entry<K, V> entry : resultList) {
             @SuppressWarnings("unchecked")
