@@ -64,7 +64,7 @@ public class RepeatOffenderCountCollator implements Collator<Map.Entry<Pair<Stri
                     double repeatOffenderCount = repeatOffenders.getOrDefault(county, 0);
                     double ratio = repeatOffenderCount / totalFines;
                     logger.info("County: {}, total fines: {}, repeat offenders: {}, ratio: {}", county, totalFines, repeatOffenderCount, ratio);
-                    ratio = Math.floor(ratio * 100) / 100; // truncate to 2 decimal places
+                    ratio = Math.floor(ratio * 10000) / 10000; // truncate to 2 decimal places
                     logger.info("Final ratio for county {}: {}", county, ratio);
                     return Map.entry(county, ratio);
                 })
