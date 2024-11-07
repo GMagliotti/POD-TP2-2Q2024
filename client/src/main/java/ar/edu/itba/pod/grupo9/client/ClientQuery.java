@@ -116,7 +116,7 @@ public abstract class ClientQuery implements Closeable {
         try (CSVWriter writer = new CSVWriter(new FileWriter(outputPath),
                 ';',
                 CSVWriter.NO_QUOTE_CHARACTER,
-                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                CSVWriter.NO_ESCAPE_CHARACTER,
                 CSVWriter.DEFAULT_LINE_END)) {
             for (String[] row : rows) {
                 writer.writeNext(row);
