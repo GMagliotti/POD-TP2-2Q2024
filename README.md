@@ -27,7 +27,7 @@ Para ejecutar las distintas queryes del proyecto se deben seguir los siguientes 
    ```
    Ejecutar el servidor: El mismo toma como dirección y puerto default `192.168.1.*:5701`, donde `*` es el número de nodo. Si no se especifica un puerto, se tomará el siguiente puerto disponible en orden ascendente desde el puerto 5701. Para ejecutar el servidor, correr el siguiente comando.
    ```sh
-    sh run-server.sh Daddress=<dirección> Dport=<puerto>
+    sh run-server.sh -Daddress=<dirección> -Dport=<puerto>
    ```
     Donde `<dirección>` es la dirección IP del nodo y `<puerto>` es el puerto del nodo.
 3. **Descompimir el cliente**: Dentro del directorio `client/target`, ejecutar el siguiente comando para descomprimir el archivo `tpe1-g9-client-2024.2Q-bin.tar.gz`:
