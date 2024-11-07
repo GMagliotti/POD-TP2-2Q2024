@@ -65,9 +65,11 @@ public enum QueryLoader {
         Properties prop = loadProperties();
         MultiMap<String, Ticket> tickets = hazelcastInstance.getMultiMap(prop.getProperty("hz.collection.tickets." + city.name().toLowerCase()));
         ReplicatedMap<String, Infraction> infractions = hazelcastInstance.getReplicatedMap(prop.getProperty("hz.collection.infractions." + city.name().toLowerCase()));
+        ReplicatedMap<String, Integer> agencies = hazelcastInstance.getReplicatedMap(prop.getProperty("hz.collection.agencies." + city.name().toLowerCase()));
 
         loadTickets(tickets, inPath + "/" + city.getTicketsPath(), city);
         loadInfractions(infractions, inPath + "/" + city.getInfractionsPath(), city);
+        loadAgencies(agencies, inPath + "/" + city.getAgenciesPath(), city);
     }
 
     private static void loadDataQuery2(HazelcastInstance hazelcastInstance, String inPath, City city) {
