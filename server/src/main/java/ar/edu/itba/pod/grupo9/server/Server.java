@@ -66,7 +66,8 @@ public class Server {
             JoinConfig joinConfig = new JoinConfig().setMulticastConfig(multicastConfig);
 
             InterfacesConfig interfacesConfig = new InterfacesConfig()
-                    .setInterfaces(Collections.singletonList(address));
+                    .setInterfaces(Collections.singletonList(address))
+                    .setEnabled(true);
 
             NetworkConfig networkConfig = new NetworkConfig().setInterfaces(interfacesConfig)
                     .setJoin(joinConfig)
